@@ -20,13 +20,11 @@ public class AWGNLatticeEncoder {
 		_gMatrix = _hMatrix.inverse();
 	}
 	
-	public Signal getAWGNSignal (Signal integerSignalVector, double variance) {
+	public Signal getEncodedSignal (Signal sourceSignal) {
 		
-		RandomSignalGenerator rsGenerator = new RandomSignalGenerator();
-		Signal gNoiseVector = rsGenerator.nextGaussianNoiseVector(_length, variance);
-		Signal corruptedSignal = new Signal(_length, _gMatrix.times(integerSignalVector.toMatrix()).plus(gNoiseVector.toMatrix()));
+		Signal encodedSignal = new Signal(_length, _gMatrix.times(sourceSignal.toMatrix()));
 		
-		return corruptedSignal;
+		return encodedSignal;
 	}
 	
 	public Matrix getHMatrix() {

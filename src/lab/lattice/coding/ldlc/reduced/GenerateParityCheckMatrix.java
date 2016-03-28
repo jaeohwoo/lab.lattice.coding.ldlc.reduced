@@ -22,7 +22,7 @@ public class GenerateParityCheckMatrix {
 	public Matrix getParityCheckMatrixSFS() throws IOException {
 		
 		// Initialization
-		Random r = new Random(ControlConstants.RANDOM_SEED);
+		Random r = new Random(/*ControlConstants.RANDOM_SEED*/);
 		int[][] PMatrix = new int[_degree][_length];
 		for (int i = 0; i < _degree; i++) {
 			int[] perm = getRandomPermutation(_length);
@@ -131,7 +131,7 @@ public class GenerateParityCheckMatrix {
 	
 	private int[] getRandomPermutation (int length){
 		
-		Random r = new Random(ControlConstants.RANDOM_SEED);
+		Random r = new Random(/*ControlConstants.RANDOM_SEED*/);
 
 	    // initialize array and fill it with {0,1,2...}
 	    int[] array = new int[length];

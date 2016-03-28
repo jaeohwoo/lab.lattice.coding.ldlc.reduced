@@ -8,7 +8,7 @@ public class RandomSignalGenerator {
 	private int maxInt = 1000;
 	
 	public RandomSignalGenerator() {
-		_r = new Random(ControlConstants.RANDOM_SEED);
+		_r = new Random(/*ControlConstants.RANDOM_SEED*/);
 	}
 	
 	public Signal nextIntegerMessageVector(int length) {

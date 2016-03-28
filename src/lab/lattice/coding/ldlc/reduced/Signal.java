@@ -47,4 +47,41 @@ public class Signal {
 		}
 		System.out.println();
 	}
+	
+	public Signal getRoundedSignal() {
+		
+		double[] roundedMessage = new double [_length];
+		
+		for (int i = 0; i < _length; i++) {
+			roundedMessage[i] = Math.round(_message[i]);
+		}
+		
+		return new Signal(_length, roundedMessage);
+	}
+	
+	public double compareRate(Signal sig) {
+		
+		double rate = 0;
+		if (sig.size() != _length) {
+			return -1;
+		}
+		
+		for (int i = 0 ; i < _length; i++) {
+			if (sig.get(i) != _message[i]) {
+				rate = rate + 1.0;
+			}
+		}
+		rate = rate / _length;
+		
+		return rate;
+	}
+	
+	public Signal applyGaussianNoise(double variance) {
+		
+		RandomSignalGenerator rsGenerator = new RandomSignalGenerator();
+		Signal gNoiseVector = rsGenerator.nextGaussianNoiseVector(_length, variance);
+		Signal corruptedSignal = new Signal(_length, this.toMatrix().plus(gNoiseVector.toMatrix()));
+		
+		return corruptedSignal;
+	}
 }

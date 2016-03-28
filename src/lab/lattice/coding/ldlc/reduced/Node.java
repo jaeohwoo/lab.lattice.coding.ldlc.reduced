@@ -219,8 +219,6 @@ public class Node {
 					indices[0] = i;
 					indices[1] = j;
 				}
-				
-//				System.out.println(gql);
 			}
 		}
 		
@@ -235,10 +233,10 @@ public class Node {
 		
 		double m = weight1 * mean1 + weight2 * mean2;
 		double v = weight1 * (mean1 * mean1 + variance1) + weight2 * (mean2 * mean2 + variance2) - (m*m);
-		double gql = 1 / (2 * Math.sqrt(Math.PI * v)) + weight1*weight1/(2*Math.sqrt(Math.PI*variance1)) + weight2*weight2/(2*Math.sqrt(Math.PI*variance2)) 
-				- ((2*weight1) / (Math.sqrt(2*Math.PI*(v+variance1))))*Math.exp(-(m-mean1)*(m-mean1)/(2*(v+variance1)))
-				- ((2*weight2) / (Math.sqrt(2*Math.PI*(v+variance2))))*Math.exp(-(m-mean2)*(m-mean2)/(2*(v+variance2)))
-				+ ((2*weight1*weight2) / (Math.sqrt(2*Math.PI*(variance1 + variance2))))*Math.exp(-(mean1-mean2)*(mean1-mean2)/(2*(variance1+variance2)));
+		double gql = 1.0 / (2.0 * Math.sqrt(Math.PI * v)) + weight1*weight1/(2.0*Math.sqrt(Math.PI*variance1)) + weight2*weight2/(2.0*Math.sqrt(Math.PI*variance2)) 
+				- ((2.0*weight1) / (Math.sqrt(2.0*Math.PI*(v+variance1))))*Math.exp(-(m-mean1)*(m-mean1)/(2.0*(v+variance1)))
+				- ((2.0*weight2) / (Math.sqrt(2.0*Math.PI*(v+variance2))))*Math.exp(-(m-mean2)*(m-mean2)/(2.0*(v+variance2)))
+				+ ((2.0*weight1*weight2) / (Math.sqrt(2.0*Math.PI*(variance1 + variance2))))*Math.exp(-(mean1-mean2)*(mean1-mean2)/(2.0*(variance1+variance2)));
 		
 		return gql;
 	}

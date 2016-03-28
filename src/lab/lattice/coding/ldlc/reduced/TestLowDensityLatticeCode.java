@@ -6,9 +6,11 @@ public class TestLowDensityLatticeCode {
 
 	public static void main(String[] argc) throws IOException{
 		
-		int signalLength = 10; //n
+		int signalLength = 100; //n
 		int magicNumber = 3; //d
-		double[] sNRdB = {1,2,3,4,5,6};
+		
+		int sampleSize = 100;
+		double[] sNRdB = {2};
 
 		AWGNLatticeEncoder awgnEncoder = new AWGNLatticeEncoder(signalLength, magicNumber);
 		LatticDecoder latticeDecoder = new LatticDecoder(awgnEncoder.getHMatrix(), signalLength, magicNumber);
@@ -19,24 +21,44 @@ public class TestLowDensityLatticeCode {
 		System.out.println("det(H) = " + awgnEncoder.getHMatrix().det());
 		
 		RandomSignalGenerator rsGenerator = new RandomSignalGenerator();
-//		Signal integerSignalVector = rsGenerator.nextZeroIntegerMessageVector(signalLength);
-//		Signal integerSignalVector = rsGenerator.nextIntegerMessageVector(signalLength);
-		Signal integerSignalVector = rsGenerator.nextSignedOneIntegerMessageVector(signalLength);
-		System.out.println("Integer Message");
-		integerSignalVector.printMessage();
 		
 		for (int i = 0; i < sNRdB.length; i++) {
 			double variance = getVariance(sNRdB[i]);
 			System.out.println("Variance = " + variance);
-			Signal noisedSignal = awgnEncoder.getAWGNSignal(integerSignalVector, variance);
-			System.out.println("AWGN Corrupted Signal");
-			noisedSignal.printMessage();
-			Signal decodedSignal = latticeDecoder.decode(noisedSignal, variance);
-			System.out.println("AWGN Decoded Signal");
-			decodedSignal.printMessage();
-			Signal naiveGuass = new Signal(signalLength, awgnEncoder.getHMatrix().times(noisedSignal.toMatrix()));
-			System.out.println("Naive Guess");
-			naiveGuass.printMessage();
+			
+			Signal integerSignalVector = rsGenerator.nextZeroIntegerMessageVector(signalLength);
+//			Signal integerSignalVector = rsGenerator.nextIntegerMessageVector(signalLength);
+//			Signal integerSignalVector = rsGenerator.nextSignedOneIntegerMessageVector(signalLength);
+		
+			Signal encodedSignal = awgnEncoder.getEncodedSignal(integerSignalVector);
+			
+			double ser = 0;
+			double naiveSer = 0;
+			for (int j = 0; j < sampleSize; j++) {
+				System.out.println("Iteration Count = " + j);
+
+//				System.out.println("Integer Message");
+//				integerSignalVector.printMessage();
+
+				Signal noisedSignal = encodedSignal.applyGaussianNoise(variance);
+//				System.out.println("AWGN Corrupted Signal");
+//				noisedSignal.printMessage();
+				
+				Signal decodedSignal = latticeDecoder.decode(noisedSignal, variance);
+//				System.out.println("AWGN Decoded Signal");
+//				decodedSignal.printMessage();
+				
+				Signal naiveGuass = new Signal(signalLength, awgnEncoder.getHMatrix().times(noisedSignal.toMatrix()));
+//				System.out.println("Naive Guess");
+//				naiveGuass.getRoundedSignal().printMessage();
+
+				ser = ser + decodedSignal.getRoundedSignal().compareRate(integerSignalVector);
+				naiveSer = naiveSer + naiveGuass.getRoundedSignal().compareRate(integerSignalVector);
+//				System.out.println("Each Decoding Bit Error Rate = " + temp);
+			}
+			
+			System.out.println("SER = " + ser / sampleSize);
+			System.out.println("Naive SER = " + naiveSer / sampleSize);
 		}
 	}
 	
