@@ -62,12 +62,13 @@ public class Signal {
 	public double compareRate(Signal sig) {
 		
 		double rate = 0;
+		double tolerance = 1e-10;
 		if (sig.size() != _length) {
 			return -1;
 		}
 		
 		for (int i = 0 ; i < _length; i++) {
-			if (sig.get(i) != _message[i]) {
+			if (Math.abs( sig.get(i) -_message[i]) > tolerance) {
 				rate = rate + 1.0;
 			}
 		}
@@ -79,9 +80,24 @@ public class Signal {
 	public Signal applyGaussianNoise(double variance) {
 		
 		RandomSignalGenerator rsGenerator = new RandomSignalGenerator();
-		Signal gNoiseVector = rsGenerator.nextGaussianNoiseVector(_length, variance);
+		Signal gNoiseVector = rsGenerator.nextGaussianNoiseVector(_length, Math.sqrt(variance));
 		Signal corruptedSignal = new Signal(_length, this.toMatrix().plus(gNoiseVector.toMatrix()));
 		
 		return corruptedSignal;
+	}
+	
+	public double getVariance() {
+		
+		double sum = 0;
+		double sqsum = 0;
+		for (int i = 0; i < _length; i++) {
+			sum += _message[i];
+			sqsum += _message[i] * _message[i];
+		}
+		
+		sum /= _length;
+		sqsum /= _length;
+		
+		return (sqsum - (sum*sum));
 	}
 }

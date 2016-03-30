@@ -52,7 +52,7 @@ public class GaussianMixtureMessage {
 		return _tripleList.get(index).getWeight();
 	}
 
-	public void normalizeWegiths() {
+	private void normalizeWegiths() {
 		
 		double sum = 0;
 		for (int i = 0; i < _size; i++) {

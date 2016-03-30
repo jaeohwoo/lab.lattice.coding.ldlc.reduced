@@ -52,12 +52,12 @@ public class RandomSignalGenerator {
 		return new Signal(length, b);
 	}
 	
-	public Signal nextGaussianNoiseVector(int length, double variance) {
+	public Signal nextGaussianNoiseVector(int length, double sigma) {
 		
 		double[] b = new double [length];
 		
 		for (int i = 0; i < length; i++) {
-			b[i] = _r.nextGaussian() * Math.sqrt(variance);
+			b[i] = _r.nextGaussian() * sigma;
 		}
 
 		return new Signal(length, b);

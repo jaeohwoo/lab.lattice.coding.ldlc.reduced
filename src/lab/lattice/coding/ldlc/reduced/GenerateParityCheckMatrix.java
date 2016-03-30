@@ -56,15 +56,17 @@ public class GenerateParityCheckMatrix {
 						continue;
 					}
 					for (int i = 0; (i < _degree) && !loop4_exists; i++) {
-						if (PMatrix[i][c] == PMatrix[i][j]) {
-							sameCount++;
-						}
-						if (sameCount == 1) {
-							first_row = i;
-						}
-						if (sameCount == 2) {
-							changed_permutation = first_row;
-							loop4_exists = true;
+						for (int k = 0; (k < _degree) && !loop4_exists; k++) {
+							if (PMatrix[i][c] == PMatrix[k][j]) {
+								sameCount++;
+							}
+							if (sameCount == 1) {
+								first_row = i;
+							}
+							if (sameCount == 2) {
+								changed_permutation = first_row;
+								loop4_exists = true;
+							}
 						}
 					}
 				}
@@ -82,7 +84,6 @@ public class GenerateParityCheckMatrix {
 				// no loop
 				loopless_columns = loopless_columns + 1;
 			}
-			
 			c++;
 			
 			if (c >= _length) {
@@ -108,7 +109,7 @@ public class GenerateParityCheckMatrix {
 			}
 		}
 		
-		HMatrix = HMatrix.times(1/Math.pow(Math.abs(HMatrix.det()), 1.0/_length));
+		HMatrix = HMatrix.times(1.0/Math.pow(Math.abs(HMatrix.det()), 1.0/_length));
 		
 		return HMatrix;
 	}

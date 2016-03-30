@@ -9,8 +9,8 @@ public class TestLowDensityLatticeCode {
 		int signalLength = 100; //n
 		int magicNumber = 3; //d
 		
-		int sampleSize = 100;
-		double[] sNRdB = {2};
+		int sampleSize = 200;
+		double[] sNRdB = {4};
 
 		AWGNLatticeEncoder awgnEncoder = new AWGNLatticeEncoder(signalLength, magicNumber);
 		LatticDecoder latticeDecoder = new LatticDecoder(awgnEncoder.getHMatrix(), signalLength, magicNumber);
@@ -34,6 +34,7 @@ public class TestLowDensityLatticeCode {
 			
 			double ser = 0;
 			double naiveSer = 0;
+			double averageSampleNoise = 0;
 			for (int j = 0; j < sampleSize; j++) {
 				System.out.println("Iteration Count = " + j);
 
@@ -41,6 +42,8 @@ public class TestLowDensityLatticeCode {
 //				integerSignalVector.printMessage();
 
 				Signal noisedSignal = encodedSignal.applyGaussianNoise(variance);
+				averageSampleNoise += noisedSignal.getVariance();
+				System.out.println("Signal Sample Noise = " + noisedSignal.getVariance());
 //				System.out.println("AWGN Corrupted Signal");
 //				noisedSignal.printMessage();
 				
@@ -52,13 +55,18 @@ public class TestLowDensityLatticeCode {
 //				System.out.println("Naive Guess");
 //				naiveGuass.getRoundedSignal().printMessage();
 
-				ser = ser + decodedSignal.getRoundedSignal().compareRate(integerSignalVector);
+				double temp = decodedSignal.getRoundedSignal().compareRate(integerSignalVector);
+				if (temp > 0) {
+					System.out.println("Each Error Rate = " + temp);
+				}
+				ser = ser + temp;
 				naiveSer = naiveSer + naiveGuass.getRoundedSignal().compareRate(integerSignalVector);
 //				System.out.println("Each Decoding Bit Error Rate = " + temp);
 			}
 			
 			System.out.println("SER = " + ser / sampleSize);
 			System.out.println("Naive SER = " + naiveSer / sampleSize);
+			System.out.println("Sample Noise = " + averageSampleNoise / sampleSize);
 		}
 	}
 	

@@ -12,6 +12,25 @@ public class Node {
 	private NodeNeighborMessageManager _manager;
 	private GaussianMixtureMessage _alphaD;
 	
+	private class ArgMinGQL {
+		
+		private double _minGQL;
+		private int[] _argMins;
+		
+		public ArgMinGQL(double minGQL, int[] argMins) {
+			_minGQL = minGQL;
+			_argMins = argMins;
+		}
+		
+		public double getMinGQL() {
+			return _minGQL;
+		}
+		
+		public int[] getArgMins() {
+			return _argMins;
+		}
+	}
+	
 	public Node(int nodeIndex, double channelSignal, double channelVariance,
 			NodeNeighborMessageManager manager) {
 		
@@ -74,16 +93,16 @@ public class Node {
 			
 			RhoTildeMessage message = rhoTildeList.get(i);
 			for (int j = 0; j < ControlConstants.NUMBER_OF_EXTENSIONS; j++) {
-				extendedMeans[j] = message.getMean() + ((j - (ControlConstants.NUMBER_OF_EXTENSIONS/2)) / message.getHValue());
+				extendedMeans[j] = message.getMean() + ((j - (Math.floor(ControlConstants.NUMBER_OF_EXTENSIONS * 0.5))) / message.getHValue());
 				extendedVariances[j] = message.getVariance();
 				extendedWeights[j] = 1;
 			}
 			
-			GaussianMixtureMessage rhoMessage = new GaussianMixtureMessage (ControlConstants.NUMBER_OF_EXTENSIONS, extendedMeans, extendedVariances, extendedWeights);
+			GaussianMixtureMessage rhoMessage = new GaussianMixtureMessage(ControlConstants.NUMBER_OF_EXTENSIONS, extendedMeans, extendedVariances, extendedWeights);
 			rhoList.add(rhoMessage);
 		}
 		
-		// iterate alphaMessages (index + 1);
+		// iterate alphaMessages (at i, rho(0)...rho(i-1));
 		ArrayList<GaussianMixtureMessage> alphaList = new ArrayList<GaussianMixtureMessage> ();
 		GaussianMixtureMessage alpha = new GaussianMixtureMessage(_channelSignal, 2 * _channelVariance);
 		alphaList.add(alpha);
@@ -94,19 +113,19 @@ public class Node {
 		}
 		_alphaD = alpha;
 		
-		// iterate betaMessage
+		// iterate betaMessage (at i, rho(d-1)...rho(i))
 		ArrayList<GaussianMixtureMessage> betaList = new ArrayList<GaussianMixtureMessage> ();
 		GaussianMixtureMessage beta = new GaussianMixtureMessage(_channelSignal, 2 * _channelVariance);
 		betaList.add(beta);
-		for (int i = muSize - 2; i >= 0; i--) {
-			GaussianMixtureMessage betaTilde = productOfMixtures(beta, rhoList.get(i+1));
+		for (int i = muSize - 1; i >= 0; i--) {
+			GaussianMixtureMessage betaTilde = productOfMixtures(beta, rhoList.get(i));
 			beta = GaussianMixtureReduction(betaTilde);
 			betaList.add(0, beta);
 		}
 		
 		// final assignments
 		for (int i = 0; i < muSize; i++) {
-			GaussianMixtureMessage temp = productOfMixtures(alphaList.get(i), betaList.get(i));
+			GaussianMixtureMessage temp = productOfMixtures(alphaList.get(i), betaList.get(i+1));
 			GaussianMixtureMessage temp2 = this.MomentMatching(temp);
 			MuMessage muMessage = muList.get(i);
 			muMessage.setMean(temp2.getMean(0));
@@ -129,9 +148,11 @@ public class Node {
 		for (int i = 0; i < sizeA; i++) {
 			for (int j = 0; j < sizeB; j++) {
 				int currentIndex = sizeB * i + j;
-				newVariances[currentIndex] = Math.max(1.0 / (1.0 / a.getVariance(i) + 1.0 / b.getVariance(j)), ControlConstants.MAX_VARIANCE);
-				newMeans[currentIndex] = newVariances[currentIndex] * (a.getMean(i) / a.getVariance(i) + b.getMean(j) / b.getVariance(j));
-				newWeights[currentIndex] = (a.getWeight(i)*b.getWeight(j)) / (Math.sqrt(2*Math.PI*(a.getVariance(i) + b.getVariance(j)))) 
+				newVariances[currentIndex] = 1.0 / ((a.getVariance(i)+b.getVariance(j))/(a.getVariance(i)*b.getVariance(j)));
+//				newVariances[currentIndex] = Math.max(newVariances[currentIndex], ControlConstants.MAX_VARIANCE);
+				newMeans[currentIndex] = newVariances[currentIndex] * 
+						(a.getMean(i)*b.getVariance(j) + a.getVariance(i)*b.getMean(j))/ (a.getVariance(i)* b.getVariance(j));
+				newWeights[currentIndex] = ((a.getWeight(i)*b.getWeight(j)) / (Math.sqrt(2.0*Math.PI*(a.getVariance(i) + b.getVariance(j))))) 
 						* Math.exp(-0.5*(a.getMean(i) - b.getMean(j))*(a.getMean(i) - b.getMean(j)) / (a.getVariance(i)+b.getVariance(j)));
 				
 				if (Double.isNaN(newWeights[currentIndex])) {
@@ -154,14 +175,15 @@ public class Node {
 	private GaussianMixtureMessage GaussianMixtureReduction(GaussianMixtureMessage a) {
 		
 		//initialize
-		ArrayList<MeanVarianceWeightTriple> currentSearchList = (ArrayList<MeanVarianceWeightTriple>) (a.getTripleList()).clone();
+		ArrayList<MeanVarianceWeightTriple> currentSearchList = a.getTripleList();//(ArrayList<MeanVarianceWeightTriple>) (a.getTripleList()).clone();
 		int Mc = currentSearchList.size();
-		double thetac = minGQL(currentSearchList);
+		ArgMinGQL argmin = this.argMinGQL(currentSearchList);
+		double thetac = argmin.getMinGQL();
 		
 		// greedy combining
 		while (thetac < ControlConstants.THETA || Mc > ControlConstants.MMAX) {
 			
-			int[] argMinIndices = argMinGQL(currentSearchList);
+			int[] argMinIndices = argmin.getArgMins();
 			MeanVarianceWeightTriple t1 = currentSearchList.get(argMinIndices[0]);
 			MeanVarianceWeightTriple t2 = currentSearchList.get(argMinIndices[1]);
 			ArrayList<MeanVarianceWeightTriple> tempList = new ArrayList<MeanVarianceWeightTriple> (2);
@@ -174,11 +196,12 @@ public class Node {
 			currentSearchList.add(t3);
 			Mc = currentSearchList.size();
 			new GaussianMixtureMessage(Mc, currentSearchList); // doing normalization
-			thetac = minGQL(currentSearchList);
+			argmin = this.argMinGQL(currentSearchList);
+			thetac = argmin.getMinGQL();
 		}
 		
 		GaussianMixtureMessage message = new GaussianMixtureMessage(currentSearchList.size(), currentSearchList);
-		message.normalizeWegiths();
+//		message.normalizeWegiths();
 		
 		if (Double.isNaN(message.getWeight(0))) {
 			System.out.println("ERROR2");
@@ -187,24 +210,24 @@ public class Node {
 		return message;
 	}
 	
-	private double minGQL(ArrayList<MeanVarianceWeightTriple> searchList) {
-		
-		int size = searchList.size();
-		
-		double min = Double.MAX_VALUE;
-		for (int i = 0; i < size; i++) {
-			for (int j = i + 1; j < size; j++) {
-				double gql = GQL(searchList.get(i).getMean(),searchList.get(i).getVariance(),searchList.get(i).getWeight(),
-						searchList.get(j).getMean(),searchList.get(j).getVariance(),searchList.get(j).getWeight());
-				if (gql < min) {
-					min = gql; 
-				}
-			}
-		}
-		return min;
-	}
+//	private double minGQL(ArrayList<MeanVarianceWeightTriple> searchList) {
+//		
+//		int size = searchList.size();
+//		
+//		double min = Double.MAX_VALUE;
+//		for (int i = 0; i < size; i++) {
+//			for (int j = i + 1; j < size; j++) {
+//				double gql = GQL(searchList.get(i).getMean(),searchList.get(i).getVariance(),searchList.get(i).getWeight(),
+//						searchList.get(j).getMean(),searchList.get(j).getVariance(),searchList.get(j).getWeight());
+//				if (gql < min) {
+//					min = gql; 
+//				}
+//			}
+//		}
+//		return min;
+//	}
 	
-	private int[] argMinGQL(ArrayList<MeanVarianceWeightTriple> searchList) {
+	private ArgMinGQL argMinGQL(ArrayList<MeanVarianceWeightTriple> searchList) {
 		
 		int[] indices = new int [2];
 		int size = searchList.size();
@@ -222,11 +245,13 @@ public class Node {
 			}
 		}
 		
-		if (indices[1] == 0) {
-			System.out.println("ERROR1");
-		}
+		ArgMinGQL argMin = new ArgMinGQL(min, indices);
 		
-		return indices;
+//		if (indices[1] == 0) {
+//			System.out.println("ERROR1");
+//		}
+		
+		return argMin;
 	}
 	
 	private double GQL(double mean1, double variance1, double weight1, double mean2, double variance2, double weight2) {
@@ -243,7 +268,7 @@ public class Node {
 	
 	private GaussianMixtureMessage MomentMatching(GaussianMixtureMessage a) {
 		
-		a.normalizeWegiths();
+//		a.normalizeWegiths();
 		int size = a.getSize();
 		
 		double mean = 0;
@@ -256,7 +281,7 @@ public class Node {
 		}
 		variance -= mean * mean;
 		
-		variance = Math.max(variance, ControlConstants.MAX_VARIANCE);
+//		variance = Math.max(variance, ControlConstants.MAX_VARIANCE);
 		
 		return new GaussianMixtureMessage(mean, variance);
 	}
