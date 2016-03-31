@@ -5,7 +5,7 @@ public class ControlConstants {
 	public static long RANDOM_SEED = System.currentTimeMillis();
 
 	// overall BP
-	public static int NUMBER_OF_ITERATIONS = 50;
+	public static int NUMBER_OF_ITERATIONS = 200;
 	
 	public static int NUMBER_OF_EXTENSIONS = 3;  // odd number, use 3 integers near channel signal (approximation)
 	

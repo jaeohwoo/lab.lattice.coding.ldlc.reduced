@@ -9,7 +9,7 @@ public class TestLowDensityLatticeCode {
 		int signalLength = 100; //n
 		int magicNumber = 3; //d
 		
-		int sampleSize = 200;
+		int sampleSize = 20000;
 		double[] sNRdB = {4};
 
 		AWGNLatticeEncoder awgnEncoder = new AWGNLatticeEncoder(signalLength, magicNumber);
@@ -26,9 +26,9 @@ public class TestLowDensityLatticeCode {
 			double variance = getVariance(sNRdB[i]);
 			System.out.println("Variance = " + variance);
 			
-			Signal integerSignalVector = rsGenerator.nextZeroIntegerMessageVector(signalLength);
+//			Signal integerSignalVector = rsGenerator.nextZeroIntegerMessageVector(signalLength);
 //			Signal integerSignalVector = rsGenerator.nextIntegerMessageVector(signalLength);
-//			Signal integerSignalVector = rsGenerator.nextSignedOneIntegerMessageVector(signalLength);
+			Signal integerSignalVector = rsGenerator.nextSignedOneIntegerMessageVector(signalLength);
 		
 			Signal encodedSignal = awgnEncoder.getEncodedSignal(integerSignalVector);
 			
@@ -43,7 +43,7 @@ public class TestLowDensityLatticeCode {
 
 				Signal noisedSignal = encodedSignal.applyGaussianNoise(variance);
 				averageSampleNoise += noisedSignal.getVariance();
-				System.out.println("Signal Sample Noise = " + noisedSignal.getVariance());
+//				System.out.println("Signal Sample Noise = " + noisedSignal.getVariance());
 //				System.out.println("AWGN Corrupted Signal");
 //				noisedSignal.printMessage();
 				
