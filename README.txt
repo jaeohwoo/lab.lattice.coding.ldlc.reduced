@@ -1,6 +1,6 @@
-# README
+#README
 
-# Lattice Code Encoder Decoder
+#Lattice Code Encoder Decoder
 
 implemented by Jae Oh Woo.
 
