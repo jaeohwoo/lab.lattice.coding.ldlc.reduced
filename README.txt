@@ -1,10 +1,10 @@
-README
+# README
 
-Lattice Code Encoder Decoder
+# Lattice Code Encoder Decoder
 
 implemented by Jae Oh Woo.
 
-basically implements belief-propagation algorithm
+main decoder: belief-propagation algorithm
 
 Test Running Class - TestLowDensityLatticeCode.java
 Control Parameters - ControlConstants.java
