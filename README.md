@@ -1,5 +1,3 @@
-# README
-
 # Lattice Code Encoder Decoder
 
 implemented by Jae Oh Woo.
